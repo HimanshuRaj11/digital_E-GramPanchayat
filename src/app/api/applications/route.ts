@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Application from '@/models/Application';
+import Service from '@/models/Service'; // Required for population
+import User from '@/models/User';       // Required for population
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(req: Request) {
     try {
@@ -12,7 +14,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const { serviceId, data, documents } = await req.json();
+        const body = await req.json();
+        const { serviceId, data, documents } = body;
 
         if (!serviceId || !data) {
             return NextResponse.json(
@@ -42,6 +45,7 @@ export async function POST(req: Request) {
             { status: 201 }
         );
     } catch (error: any) {
+        console.error('POST Application Error:', error);
         return NextResponse.json(
             { message: 'Error submitting application', error: error.message },
             { status: 500 }
@@ -59,14 +63,17 @@ export async function GET(req: Request) {
 
         await dbConnect();
 
+        // Ensure models are registered
+        // Mongoose sometimes loses track of models in Hot Reload or Serverless environments
+        // Importing them at the top usually helps, but sometimes we need to reference them
+        const _m1 = Service;
+        const _m2 = User;
+
         let query = {};
         const role = (session.user as any).role;
 
         if (role === 'citizen') {
             query = { userId: (session.user as any).id };
-        } else {
-            // Staff and Officer can see all (or filtered by assignment, but for now all)
-            // Could add query params for filtering
         }
 
         const applications = await Application.find(query)
@@ -76,6 +83,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ applications }, { status: 200 });
     } catch (error: any) {
+        console.error('GET Application Error:', error);
         return NextResponse.json(
             { message: 'Error fetching applications', error: error.message },
             { status: 500 }

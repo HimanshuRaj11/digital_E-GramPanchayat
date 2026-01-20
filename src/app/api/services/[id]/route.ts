@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Service from '@/models/Service';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(
     req: Request,
@@ -18,8 +18,9 @@ export async function GET(
                 { status: 404 }
             );
         }
-        return NextResponse.json({ service }, { status: 200 });
+        return NextResponse.json(service, { status: 200 }); // Return direct object
     } catch (error: any) {
+        console.error('GET Service Error:', error);
         return NextResponse.json(
             { message: 'Error fetching service', error: error.message },
             { status: 500 }
@@ -62,6 +63,7 @@ export async function PUT(
             { status: 200 }
         );
     } catch (error: any) {
+        console.error('PUT Service Error:', error);
         return NextResponse.json(
             { message: 'Error updating service', error: error.message },
             { status: 500 }
@@ -97,6 +99,7 @@ export async function DELETE(
 
         return NextResponse.json({ message: 'Service deleted' }, { status: 200 });
     } catch (error: any) {
+        console.error('DELETE Service Error:', error);
         return NextResponse.json(
             { message: 'Error deleting service', error: error.message },
             { status: 500 }

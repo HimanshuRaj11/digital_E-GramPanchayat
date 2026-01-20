@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Application from '@/models/Application';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function PUT(
     req: Request,
@@ -22,10 +22,6 @@ export async function PUT(
         // Role-based validation
         if (role === 'citizen') {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
-        }
-
-        if (role === 'staff' && !['in-review', 'completed'].includes(status)) {
-            // Staff can only move to in-review or completed
         }
 
         await dbConnect();
@@ -53,6 +49,7 @@ export async function PUT(
             { status: 200 }
         );
     } catch (error: any) {
+        console.error('PUT Application Error:', error);
         return NextResponse.json(
             { message: 'Error updating application', error: error.message },
             { status: 500 }
