@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-export default function Apply({ params }: { params: { id: string } }) {
+import { use } from 'react';
+
+export default function Apply({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+    const params = use(paramsPromise);
     const { data: session } = useSession();
     const router = useRouter();
     const [service, setService] = useState<any>(null);

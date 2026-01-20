@@ -1,127 +1,172 @@
 'use client'
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
+import { getNavItemsByRole } from '@/config/navigation';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const { data: session } = useSession();
+    const pathname = usePathname();
+
+    // Handle scroll effect for glassmorphism
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const role = (session?.user as any)?.role || 'guest';
+    const navItems = getNavItemsByRole(role);
+
+    const isActive = (path: string) => pathname === path;
 
     return (
-        <div className="fixed w-full z-20 top-0">
-            {/* Top Bar */}
-            <div className="bg-zinc-900 text-white py-1 px-4 text-xs sm:text-sm">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <span>Government of India | Digital Gram Panchayat</span>
-                    <div className="flex space-x-4">
-                        <span>Language: English</span>
-                        <span>Accessibility</span>
+        <div className="fixed w-full z-50 transition-all duration-300">
+            {/* Top Bar - Hidden on scroll for cleaner look */}
+            {!scrolled && (
+                <div className="bg-zinc-900/95 text-white py-1.5 px-4 text-[10px] sm:text-xs">
+                    <div className="max-w-7xl mx-auto flex justify-between items-center">
+                        <div className="flex items-center space-x-4">
+                            <span className="opacity-80">Government of India</span>
+                            <span className="hidden sm:inline-block opacity-40">|</span>
+                            <span className="hidden sm:inline-block opacity-80">Digital Gram Panchayat Portal</span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <span className="hover:text-blue-400 cursor-pointer transition-colors">English</span>
+                            <span className="hover:text-blue-400 cursor-pointer transition-colors">हिंदी</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Main Navbar */}
-            <nav className="bg-white dark:bg-zinc-900 shadow-md">
+            <nav className={`transition-all duration-300 ${scrolled
+                ? 'bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg py-2'
+                : 'bg-white dark:bg-zinc-900 py-4'
+                } border-b border-zinc-200 dark:border-zinc-800`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+                    <div className="flex items-center justify-between">
+                        {/* Logo */}
                         <div className="flex items-center">
-                            <Link href="/" className="flex items-center space-x-2">
-                                {/* Placeholder for Emblem */}
-                                <div className="h-8 w-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                            <Link href="/" className="flex items-center space-x-3 group">
+                                <div className="h-10 w-10 bg-linear-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-105 transition-transform">
                                     GOI
                                 </div>
-                                <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                    E-Gram <span className="text-blue-600">Panchayat</span>
-                                </span>
-                            </Link>
-                            <div className="hidden md:block">
-                                <div className="ml-10 flex items-baseline space-x-4">
-                                    <Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                        Home
-                                    </Link>
-                                    <Link href="/services" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                        Services
-                                    </Link>
-                                    <Link href="/about" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                        About
-                                    </Link>
-                                    <Link href="/contact" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                        Contact
-                                    </Link>
+                                <div className="flex flex-col">
+                                    <span className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white leading-none">
+                                        E-Gram <span className="text-blue-600">Panchayat</span>
+                                    </span>
+                                    <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Digital Transformation</span>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
-                        <div className="hidden md:block">
+
+                        {/* Desktop Links */}
+                        <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.href)
+                                        ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white'
+                                        }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Right side actions */}
+                        <div className="hidden md:flex items-center space-x-4 border-l border-zinc-200 dark:border-zinc-800 ml-4 pl-4">
                             {session ? (
                                 <div className="flex items-center space-x-4">
-                                    <Link href={['admin', 'officer', 'staff'].includes((session.user as any).role) ? "/admin" : "/dashboard"} className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                        Dashboard
-                                    </Link>
-                                    <button onClick={() => signOut()} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
+                                    <div className="text-right hidden lg:block">
+                                        <div className="text-xs font-semibold text-gray-900 dark:text-white">{session.user?.name}</div>
+                                        <div className="text-[10px] text-zinc-500 capitalize">{role}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm border border-zinc-200 dark:border-zinc-700"
+                                    >
                                         Logout
                                     </button>
                                 </div>
                             ) : (
-                                <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
+                                <Link
+                                    href="/login"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg active:scale-95"
+                                >
                                     Login
                                 </Link>
                             )}
                         </div>
-                        <div className="-mr-2 flex md:hidden">
+
+                        {/* Mobile Button */}
+                        <div className="flex md:hidden">
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
                                 type="button"
-                                className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none"
-                                aria-controls="mobile-menu"
-                                aria-expanded="false"
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                             >
                                 <span className="sr-only">Open main menu</span>
-                                {!isOpen ? (
-                                    <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
-                                ) : (
-                                    <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                )}
+                                <div className="w-6 h-6 flex flex-col justify-between items-center py-1">
+                                    <span className={`block w-5 h-0.5 bg-current transform transition duration-300 ${isOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+                                    <span className={`block w-5 h-0.5 bg-current transition duration-300 ${isOpen ? 'opacity-0' : ''}`}></span>
+                                    <span className={`block w-5 h-0.5 bg-current transform transition duration-300 ${isOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+                                </div>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {isOpen && (
-                    <div className="md:hidden" id="mobile-menu">
-                        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-zinc-900 shadow-lg border-t dark:border-zinc-800">
-                            <Link href="/" className="block text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium">
-                                Home
+                {/* Mobile menu */}
+                <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-[500px] border-t dark:border-zinc-800 mt-2' : 'max-h-0'}`}>
+                    <div className="px-4 pt-4 pb-6 space-y-2 bg-white dark:bg-zinc-900">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setIsOpen(false)}
+                                className={`block px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive(item.href)
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                    : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                    }`}
+                            >
+                                {item.label}
                             </Link>
-                            <Link href="/services" className="block text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium">
-                                Services
-                            </Link>
-                            <Link href="/about" className="block text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium">
-                                About
-                            </Link>
-                            <Link href="/contact" className="block text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium">
-                                Contact
-                            </Link>
+                        ))}
+                        <div className="pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800">
                             {session ? (
-                                <>
-                                    <Link href={['admin', 'officer', 'staff'].includes((session.user as any).role) ? "/admin" : "/dashboard"} className="block text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium">
-                                        Dashboard
-                                    </Link>
-                                    <button onClick={() => signOut()} className="block w-full text-center bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-base font-medium transition-colors mt-4">
+                                <div className="space-y-4">
+                                    <div className="px-4">
+                                        <div className="text-sm font-bold text-gray-900 dark:text-white">{session.user?.name}</div>
+                                        <div className="text-xs text-zinc-500 capitalize">{role}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-xl text-base font-bold transition-all text-center"
+                                    >
                                         Logout
                                     </button>
-                                </>
+                                </div>
                             ) : (
-                                <Link href="/login" className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-base font-medium transition-colors mt-4">
-                                    Login
+                                <Link
+                                    href="/login"
+                                    onClick={() => setIsOpen(false)}
+                                    className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl text-center font-bold shadow-lg"
+                                >
+                                    Login to Portal
                                 </Link>
                             )}
                         </div>
                     </div>
-                )}
+                </div>
             </nav>
         </div>
     );

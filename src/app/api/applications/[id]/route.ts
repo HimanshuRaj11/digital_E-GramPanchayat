@@ -6,9 +6,10 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function PUT(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
 
         if (!session || !session.user) {
@@ -24,14 +25,12 @@ export async function PUT(
         }
 
         if (role === 'staff' && !['in-review', 'completed'].includes(status)) {
-            // Staff can only move to in-review or completed (maybe?)
-            // Adjust logic as per requirements: Staff: pending -> in-review -> completed?
-            // Officer: approve/reject?
+            // Staff can only move to in-review or completed
         }
 
         await dbConnect();
 
-        const application = await Application.findById(params.id);
+        const application = await Application.findById(id);
         if (!application) {
             return NextResponse.json(
                 { message: 'Application not found' },

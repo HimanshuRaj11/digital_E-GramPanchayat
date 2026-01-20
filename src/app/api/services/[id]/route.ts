@@ -6,11 +6,12 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         await dbConnect();
-        const service = await Service.findById(params.id);
+        const service = await Service.findById(id);
         if (!service) {
             return NextResponse.json(
                 { message: 'Service not found' },
@@ -28,9 +29,10 @@ export async function GET(
 
 export async function PUT(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
 
         if (
@@ -44,7 +46,7 @@ export async function PUT(
         const updates = await req.json();
         await dbConnect();
 
-        const service = await Service.findByIdAndUpdate(params.id, updates, {
+        const service = await Service.findByIdAndUpdate(id, updates, {
             new: true,
         });
 
@@ -69,9 +71,10 @@ export async function PUT(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
 
         if (
@@ -83,7 +86,7 @@ export async function DELETE(
         }
 
         await dbConnect();
-        const service = await Service.findByIdAndDelete(params.id);
+        const service = await Service.findByIdAndDelete(id);
 
         if (!service) {
             return NextResponse.json(

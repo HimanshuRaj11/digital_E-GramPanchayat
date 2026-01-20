@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
     const { data: session } = useSession();
@@ -22,107 +23,100 @@ export default function AdminDashboard() {
                 .then((data) => {
                     setApplications(data.applications || []);
                     setLoading(false);
-                });
+                })
+                .catch(() => setLoading(false));
         }
     }, [session, router]);
 
-    const updateStatus = async (id: string, newStatus: string) => {
-        const res = await fetch(`/api/applications/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus, comment: 'Status updated' }),
-        });
+    if (loading) return <div className="p-8 text-center animate-pulse py-24 text-zinc-400 font-medium">Initializing Administration Portal...</div>;
 
-        if (res.ok) {
-            setApplications((prev: any) =>
-                prev.map((app: any) =>
-                    app._id === id ? { ...app, status: newStatus } : app
-                )
-            );
-        } else {
-            alert('Failed to update status');
-        }
-    };
-
-    if (loading) return <div className="p-8">Loading...</div>;
+    const pendingCount = applications.filter((a: any) => a.status === 'pending' || a.status === 'in-review').length;
+    const completedCount = applications.filter((a: any) => a.status === 'approved' || a.status === 'completed').length;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="mx-auto max-w-6xl">
-                <div className="mb-8 flex items-center justify-between">
-                    <h1 className="text-3xl font-bold text-gray-800">
-                        Admin Dashboard ({session?.user?.name} - {(session?.user as any).role})
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-2">
+                        Official <span className="text-blue-600">Dashboard</span>
                     </h1>
+                    <p className="text-zinc-500 dark:text-zinc-400">Manage village services and citizen applications ({session?.user?.name}).</p>
+                </div>
+                <div className="flex gap-4">
                     {['officer', 'admin'].includes((session?.user as any).role) && (
                         <button
                             onClick={() => router.push('/admin/services/new')}
-                            className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                            className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 transition-all active:scale-95"
                         >
-                            Create New Service
+                            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Create Service
                         </button>
                     )}
                 </div>
+            </div>
 
-                <div className="rounded-lg bg-white p-6 shadow-md">
-                    <h2 className="mb-4 text-xl font-semibold text-gray-700">
-                        All Applications
-                    </h2>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Applicant
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Service
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                                {applications.map((app: any) => (
-                                    <tr key={app._id}>
-                                        <td className="whitespace-nowrap px-6 py-4">
-                                            {app.userId?.name}
-                                        </td>
-                                        <td className="whitespace-nowrap px-6 py-4">
-                                            {app.serviceId?.name}
-                                        </td>
-                                        <td className="whitespace-nowrap px-6 py-4">
-                                            <span
-                                                className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${app.status === 'approved'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : app.status === 'rejected'
-                                                            ? 'bg-red-100 text-red-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
-                                                    }`}
-                                            >
-                                                {app.status}
-                                            </span>
-                                        </td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                                            <select
-                                                value={app.status}
-                                                onChange={(e) => updateStatus(app._id, e.target.value)}
-                                                className="rounded border border-gray-300 p-1"
-                                            >
-                                                <option value="pending">Pending</option>
-                                                <option value="in-review">In Review</option>
-                                                <option value="approved">Approved</option>
-                                                <option value="rejected">Rejected</option>
-                                                <option value="completed">Completed</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            {/* Admin Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all">
+                    <div className="text-3xl font-extrabold text-zinc-900 dark:text-white mb-1">{applications.length}</div>
+                    <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Total Vault</div>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all border-l-4 border-l-orange-500">
+                    <div className="text-3xl font-extrabold text-zinc-900 dark:text-white mb-1">{pendingCount}</div>
+                    <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest text-orange-600">Awaiting Review</div>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all border-l-4 border-l-green-500">
+                    <div className="text-3xl font-extrabold text-zinc-900 dark:text-white mb-1">{completedCount}</div>
+                    <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest text-green-600">Processed</div>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all">
+                    <div className="text-3xl font-extrabold text-zinc-900 dark:text-white mb-1">24</div>
+                    <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Active Services</div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Recent Incoming</h2>
+                        <Link href="/admin/applications" className="text-sm font-bold text-blue-600 hover:text-blue-700">Go to Processing →</Link>
+                    </div>
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                        {applications.slice(0, 5).map((app: any) => (
+                            <div key={app._id} className="p-6 flex items-center justify-between">
+                                <div>
+                                    <div className="text-sm font-bold text-zinc-900 dark:text-white">{app.userId?.name}</div>
+                                    <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest">{app.serviceId?.name}</div>
+                                </div>
+                                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${app.status === 'approved' || app.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                        app.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                            'bg-blue-100 text-blue-700'
+                                    }`}>
+                                    {app.status}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    {applications.length === 0 && (
+                        <div className="p-12 text-center text-zinc-500">No applications in history.</div>
+                    )}
+                </div>
+
+                <div className="bg-zinc-900 rounded-3xl p-8 text-white relative overflow-hidden group">
+                    <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-500/20 rounded-full blur-[80px]"></div>
+                    <h2 className="text-2xl font-bold mb-4 relative z-10">Quick Administration</h2>
+                    <p className="text-zinc-400 mb-8 relative z-10">Access specialized areas for governance and portal management.</p>
+                    <div className="grid grid-cols-2 gap-4 relative z-10">
+                        <Link href="/admin/services" className="bg-zinc-800 hover:bg-zinc-700 p-4 rounded-2xl border border-zinc-700 transition-colors">
+                            <div className="font-bold mb-1">Catalog</div>
+                            <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Manage Services</div>
+                        </Link>
+                        <Link href="/admin/users" className="bg-zinc-800 hover:bg-zinc-700 p-4 rounded-2xl border border-zinc-700 transition-colors">
+                            <div className="font-bold mb-1">Citizens</div>
+                            <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">User Database</div>
+                        </Link>
                     </div>
                 </div>
             </div>
