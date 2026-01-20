@@ -57,7 +57,7 @@ export default function Services() {
                             <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors">
                                 {service.name}
                             </h2>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed mb-8 flex-grow">
+                            <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed mb-8 grow">
                                 {service.description}
                             </p>
 

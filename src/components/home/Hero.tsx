@@ -58,7 +58,7 @@ const Hero = () => {
                             <div className="aspect-square bg-linear-to-br from-blue-600/20 via-zinc-100 to-orange-500/20 dark:from-blue-900/40 dark:via-zinc-900 dark:to-orange-900/40 flex items-center justify-center p-12">
                                 <div className="w-full max-w-[280px] aspect-square relative group">
                                     {/* Abstract Visual Representing Digital Village */}
-                                    <div className="absolute inset-0 bg-blue-600 rounded-[2rem] rotate-6 scale-95 opacity-20 group-hover:rotate-12 transition-transform duration-500"></div>
+                                    <div className="absolute inset-0 bg-blue-600 rounded-4xl rotate-6 scale-95 opacity-20 group-hover:rotate-12 transition-transform duration-500"></div>
                                     <div className="absolute inset-0 bg-orange-500 rounded-[2.5rem] -rotate-6 scale-95 opacity-20 group-hover:-rotate-12 transition-transform duration-500"></div>
                                     <div className="relative bg-white dark:bg-zinc-800 h-full w-full rounded-2xl shadow-2xl flex flex-col items-center justify-center p-8 border border-zinc-100 dark:border-zinc-700">
                                         <svg className="h-24 w-24 text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
