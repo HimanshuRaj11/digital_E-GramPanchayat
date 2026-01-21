@@ -74,10 +74,10 @@ export default function ServicesPage() {
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         {services.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     No services found. Add one to get started.
                                 </td>
                             </tr>
@@ -85,12 +85,12 @@ export default function ServicesPage() {
                             services.map((service) => (
                                 <tr key={service._id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                             {service.name}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
                                             {service.category}
                                         </div>
                                     </td>
@@ -107,8 +107,8 @@ export default function ServicesPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
                                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.isActive
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
                                                 }`}
                                         >
                                             {service.isActive ? 'Active' : 'Inactive'}
